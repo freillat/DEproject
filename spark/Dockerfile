@@ -1,35 +1,19 @@
-FROM openjdk:11-jre-slim
+FROM bitnami/spark:3.5.0
 
-# Set environment variables
-ENV SPARK_VERSION=3.5.5
-ENV HADOOP_VERSION=3
-ENV SCALA_VERSION=2.12
-ENV SPARK_HOME=/opt/spark
-ENV PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
+USER root
 
-# Install necessary packages
-RUN apt-get update && apt-get install -y wget curl python3 python3-pip --no-install-recommends && rm -rf /var/lib/apt/lists/*
+# Install Google Cloud connector jars
+ENV SPARK_HOME=/opt/bitnami/spark
+ENV HADOOP_VERSION=3.3.1
 
-# Download and install Spark with Hadoop
-RUN wget https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz -P /tmp/ && \
-    tar -xzf /tmp/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz -C /opt/ && \
-    mv /opt/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} ${SPARK_HOME} && \
-    rm /tmp/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
+# Download GCS connector and BigQuery connector
+RUN mkdir -p $SPARK_HOME/jars && \
+    curl -o $SPARK_HOME/jars/gcs-connector-hadoop3-latest.jar https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-latest.jar && \
+    curl -L -o $SPARK_HOME/jars/spark-bigquery-with-dependencies_2.12-0.36.1.jar https://repo1.maven.org/maven2/com/google/cloud/spark/spark-bigquery-with-dependencies_2.12/0.36.1/spark-bigquery-with-dependencies_2.12-0.36.1.jar
 
-# Install gcloud CLI
-RUN curl https://sdk.cloud.google.com | bash -s -- --install-dir=/opt/google-cloud-sdk --quiet
+# Install Python packages (optional)
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt
 
-# Add gcloud to PATH
-ENV PATH=$PATH:/opt/google-cloud-sdk/bin
-
-# Install gcs-connector for Hadoop (for Spark to interact with GCS)
-RUN wget https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-${HADOOP_VERSION}.jar -P ${SPARK_HOME}/jars/
-
-# Set up working directory
 WORKDIR /app
-
-# Copy your application files
-COPY /app/stock_analytics.py /app/
-
-# Command to run Spark (you might override this in your docker-compose)
-# CMD ["spark-submit", "your_spark_application.py"]
+COPY app/ /app
