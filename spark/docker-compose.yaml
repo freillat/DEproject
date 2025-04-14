@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  spark-standalone:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4040:4040" # Spark UI
+      # - "8080:8080" # Spark Master UI (if you configure a master)
+      # - "7077:7077" # Spark Master port (if you configure a master)
+    volumes:
+      - ./spark/gcp:/opt/spark/gcp  # Mount your GCP credentials
+      # - ./data:/opt/spark/data      # Optional: For local data if needed
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /opt/spark/gcp/gcp-service-account.json
+      PYSPARK_PYTHON: python3
+      PYSPARK_DRIVER_PYTHON: python3
+    command: ["spark-shell", "--packages", "com.google.cloud.spark:spark-bigquery-with-dependencies:0.34.0"] # Or spark-submit for an application
