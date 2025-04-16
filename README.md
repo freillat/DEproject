@@ -91,6 +91,22 @@ docker-compose up
 
 ---
 
+### 4. Dashboard
+
+A simple dashboard was created using **Google Looker Studio**, connected directly to the BigQuery tables generated in the analytics step. It includes:
+
+- Average monthly closing price and volume (per stock)
+- Best and worst return days (per stock)
+
+You can view the dashboard here:  
+📊 [Looker Studio Report](https://lookerstudio.google.com/reporting/2ad4cf58-09cd-4db1-be3b-71231c12bbcc)
+
+> _Note: The screenshot below is included for reference in case the report link becomes inactive after the free trial period._
+
+
+![alt text](image.png)
+
+
 ## 🗂️ Project Structure
 
 ```
