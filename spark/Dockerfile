@@ -6,6 +6,8 @@ USER root
 ENV SPARK_HOME=/opt/bitnami/spark
 ENV HADOOP_VERSION=3.3.1
 
+RUN apt-get update && apt-get install -y curl && apt-get clean
+
 # Download GCS connector and BigQuery connector
 RUN mkdir -p $SPARK_HOME/jars && \
     curl -o $SPARK_HOME/jars/gcs-connector-hadoop3-latest.jar https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-latest.jar && \
