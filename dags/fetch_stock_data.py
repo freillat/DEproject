@@ -8,7 +8,7 @@ import os
 
 # API_KEY = os.environ.get("POLYGON_API_KEY")
 API_KEY = "KiEBX8MwaypH8pga_nbLsKAWcp9JYam7"
-BASE_URL = "https://api.polygon.io/v2/aggs/ticker/{ticker}/range/1/day/2023-01-01/2023-12-31?adjusted=true&sort=asc&limit=120"
+BASE_URL = "https://api.polygon.io/v2/aggs/ticker/{ticker}/range/1/day/2023-01-01/2025-04-14?adjusted=true&sort=asc&limit=50000"
 
 def fetch_stock_data(**kwargs):
     import pyarrow as pa
