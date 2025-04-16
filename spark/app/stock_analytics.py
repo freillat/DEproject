@@ -7,7 +7,6 @@ from pyspark.sql.window import Window
 from pyspark.sql.types import DoubleType, LongType, StringType
 from google.cloud import bigquery, storage
 from google.oauth2 import service_account
-# import os
 import logging
 
 logging.basicConfig(
@@ -19,9 +18,8 @@ logger = logging.getLogger(__name__)
 # --- Config ---
 BQ_PROJECT = "stock-data-order66"  # replace
 BQ_DATASET = "stock_analytics"
-BQ_LOCATION = "US"  # or "EU" depending on your region
+BQ_LOCATION = "US"
 GCP_CREDENTIALS_PATH = "/opt/spark/gcp/gcp-service-account.json"
-
 BUCKET_NAME = "sp500-stock-data-bucket"
 BASE_PATH = f"gs://{BUCKET_NAME}/stocks"
 
@@ -44,28 +42,6 @@ def list_parquet_files(bucket_name: str, prefix: str) -> list:
     bucket = client.bucket(bucket_name)
     blobs = list(bucket.list_blobs(prefix=prefix))
     return [f"gs://{bucket_name}/{blob.name}" for blob in blobs if blob.name.endswith(".parquet")]
-
-# def read_all_stock_data(spark, bucket_name="sp500-stock-data-bucket", folder="stocks"):
-#     folder = folder.replace("*", "").rstrip("/")
-#     files = list_parquet_files(bucket_name, folder)
-#     all_dfs = []
-#     skipped_files = []
-
-#     for file_path in files:
-#         try:
-#             df = spark.read.option("mergeSchema", "false").parquet(file_path)
-#             casted_df = cast_stock_df(df)
-#             all_dfs.append(casted_df)
-#         except Exception as e:
-#             print(f"⚠️ Skipping file {file_path} due to error: {e}")
-#             skipped_files.append((file_path, str(e)))
-
-#     if skipped_files:
-#         print("\n📄 Skipped files summary:")
-#         for path, err in skipped_files:
-#             print(f"  - {path} → {err}")
-
-#     return all_dfs[0].unionByName(*all_dfs[1:]) if all_dfs else None
 
 def read_all_stock_data(spark, bucket_name="sp500-stock-data-bucket", folder="stocks"):
     folder = folder.replace("*", "").rstrip("/")
@@ -122,15 +98,6 @@ def clean_df(df):
     return df
 
 # --- Write to BigQuery ---
-# def write_to_bq(df, table_name, mode="overwrite"):
-#     df.write \
-#         .format("bigquery") \
-#         .option("temporaryGcsBucket", BUCKET_NAME) \
-#         .option("table", f"{BQ_PROJECT}:{BQ_DATASET}.{table_name}") \
-#         .mode(mode) \
-#         .save()
-#     print(f"Wrote table: {BQ_DATASET}.{table_name}")
-
 def write_to_bq(df, table_name, mode="overwrite"):
     try:
         df.coalesce(1).write \
@@ -142,23 +109,6 @@ def write_to_bq(df, table_name, mode="overwrite"):
         logger.info("✅ Wrote table: %s.%s", BQ_DATASET, table_name)
     except Exception as e:
         logger.exception("❌ Failed to write table: %s", table_name)    
-
-
-# def read_stocks_df(spark, file_pattern):
-#     raw_df = spark.read.parquet(file_pattern)
-
-#     # Explicitly cast schema to ensure consistency
-#     return raw_df.select(
-#         col("v").cast(DoubleType()).alias("v"),
-#         col("vw").cast(DoubleType()).alias("vw"),
-#         col("o").cast(DoubleType()).alias("o"),
-#         col("c").cast(DoubleType()).alias("c"),
-#         col("h").cast(DoubleType()).alias("h"),
-#         col("l").cast(DoubleType()).alias("l"),
-#         col("t").cast(LongType()).alias("t"),
-#         col("n").cast(LongType()).alias("n"),
-#         col("ticker").cast(StringType()).alias("ticker")
-#     )        
 
 def main():
 
@@ -182,14 +132,12 @@ def main():
         .config("spark.hadoop.fs.gs.status.parallel.enable", "false") \
         .getOrCreate()
     
-    # Read all Parquet files matching the pattern
-    # file_pattern = f"{BASE_PATH}/*.parquet"
-    # df = read_all_stock_data(spark, file_pattern)
+    # Read all Parquet files
     df = read_all_stock_data(spark, bucket_name=BUCKET_NAME, folder="stocks")
 
     # Show the schema and a few rows
     df.printSchema()
-    df.show(100)
+    df.show(10)
 
     df = df.withColumn("date", to_date(from_unixtime(col("t") / 1000)))
 
