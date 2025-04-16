@@ -1,4 +1,4 @@
-# 📊 DEproject — Data Engineering on Stock Market Data
+# 📊 Data Engineering project on Stock Market Data
 
 ## 🧠 Goal
 
