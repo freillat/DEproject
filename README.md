@@ -2,7 +2,18 @@
 
 ## 🧠 Goal
 
-Build a data engineering pipeline that ingests stock market data, performs analytics, and stores results in BigQuery. The pipeline is modular and easily extendable to include more sources and advanced analytics.
+The objective of this project is to build a scalable and reproducible **Data Engineering pipeline** that retrieves historical stock market data, processes it, and generates insightful analytics. It showcases a full modern data stack using cloud-native tools and open-source technologies, designed with modularity and extensibility in mind.
+
+This pipeline performs the following steps:
+
+- Collects historical stock data from the Polygon.io API for a subset of S&P 500 companies.
+- Stores the data in **Google Cloud Storage** in an optimized format (Parquet).
+- Uses **Apache Spark** to compute analytics such as:
+  - Average monthly closing price and volume
+  - Best daily returns
+  - Worst daily returns
+- Loads the processed analytics into **Google BigQuery**.
+- Visualizes results in **Looker Studio** for easy consumption and insights.
 
 ---
 
@@ -131,5 +142,31 @@ DEproject/
 │   └── gcp/
 │       └── gcp-service-account.json
 ```
+
+---
+
+## Possible Extensions
+
+There are many ways to extend and enhance this project:
+
+### 📈 Data
+- Fetch the **entire S&P 500** by handling Polygon API rate limits with time delays or batching.
+- Add **fundamental or macroeconomic data** (e.g., P/E ratios, interest rates) for richer analysis.
+- Integrate **real-time streaming** updates using Pub/Sub and Dataflow.
+
+### 🧠 Analytics
+- Add **technical indicators** (moving averages, RSI, MACD) via Spark.
+- Detect **outliers, anomalies**, or regime shifts in stock behavior.
+- Perform **correlation analysis** across stocks or sectors.
+
+### 🛠️ Engineering
+- Deploy Airflow on **Cloud Composer** for managed orchestration.
+- Use **Apache Iceberg or Delta Lake** for versioned data lakes.
+- Build a CI/CD pipeline to auto-trigger DAGs on new data.
+
+### 📊 Visualization
+- Add filters by sector, time period, or performance metric.
+- Use **Metabase or Superset** as alternative BI tools.
+- Embed dashboards into web apps or internal portals.
 
 ---
