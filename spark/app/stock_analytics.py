@@ -43,36 +43,40 @@ def list_parquet_files(bucket_name: str, prefix: str) -> list:
     blobs = list(bucket.list_blobs(prefix=prefix))
     return [f"gs://{bucket_name}/{blob.name}" for blob in blobs if blob.name.endswith(".parquet")]
 
-def read_all_stock_data(spark, bucket_name="sp500-stock-data-bucket", folder="stocks"):
-    folder = folder.replace("*", "").rstrip("/")
-    files = list_parquet_files(bucket_name, folder)
-    all_dfs = []
-    skipped_files = []
+# def read_all_stock_data(spark, bucket_name="sp500-stock-data-bucket", folder="stocks"):
+#     folder = folder.replace("*", "").rstrip("/")
+#     files = list_parquet_files(bucket_name, folder)
+#     all_dfs = []
+#     skipped_files = []
 
-    for file_path in files:
-        try:
-            df = spark.read.option("mergeSchema", "false").parquet(file_path)
-            casted_df = cast_stock_df(df)
-            all_dfs.append(casted_df)
-        except Exception as e:
-            print(f"⚠️ Skipping file {file_path} due to error: {e}")
-            skipped_files.append((file_path, str(e)))
+#     for file_path in files:
+#         try:
+#             df = spark.read.option("mergeSchema", "false").parquet(file_path)
+#             casted_df = cast_stock_df(df)
+#             all_dfs.append(casted_df)
+#         except Exception as e:
+#             print(f"⚠️ Skipping file {file_path} due to error: {e}")
+#             skipped_files.append((file_path, str(e)))
 
-    if skipped_files:
-        print("\n📄 Skipped files summary:")
-        for path, err in skipped_files:
-            print(f"  - {path} → {err}")
+#     if skipped_files:
+#         print("\n📄 Skipped files summary:")
+#         for path, err in skipped_files:
+#             print(f"  - {path} → {err}")
 
-    if not all_dfs:
-        return None
+#     if not all_dfs:
+#         return None
 
-    # ✅ Fix: union using a loop
-    result_df = all_dfs[0]
-    for df in all_dfs[1:]:
-        result_df = result_df.unionByName(df, allowMissingColumns=True)
+#     # ✅ Fix: union using a loop
+#     result_df = all_dfs[0]
+#     for df in all_dfs[1:]:
+#         result_df = result_df.unionByName(df, allowMissingColumns=True)
 
-    return result_df
+#     return result_df
 
+def read_all_stock_data_optimized(spark: SparkSession, base_path: str) -> DataFrame:
+    logger.info(f"Reading all stock data from {base_path}")
+    df = spark.read.option("mergeSchema", "false").parquet(base_path)
+    return cast_stock_df(df)
 
 # --- Ensure BigQuery Dataset Exists ---``
 def ensure_bq_dataset():
@@ -133,7 +137,8 @@ def main():
         .getOrCreate()
     
     # Read all Parquet files
-    df = read_all_stock_data(spark, bucket_name=BUCKET_NAME, folder="stocks")
+    # df = read_all_stock_data(spark, bucket_name=BUCKET_NAME, folder="stocks")
+    df = read_all_stock_data_optimized(spark, BASE_PATH)
 
     # Show the schema and a few rows
     df.printSchema()
